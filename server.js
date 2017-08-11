@@ -34,7 +34,7 @@ const fetchStory = (storyId) => {
         const comments = response.body.kids || 0;
         if(comments.length > 0) {
           console.log("first comments", comments);
-          async.forEach(comments, fetchComments);
+          async.map(comments, fetchComments);
         }
 
         callback();
@@ -46,11 +46,6 @@ const fetchStory = (storyId) => {
 
   });
 }
-
-// const fetchAndIncrementCount = (comment) => {
-//   console.log(comment);
-
-// }
 
 const fetchComments = (commentId) => {
   async.parallel([
