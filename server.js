@@ -34,13 +34,15 @@ const fetchStory = (storyId) => {
         if(err) return callback(err);
         // Check if children array is empty, if it is have a fallback value as 0
         const comments = response.body.kids || 0;
+        const user = response.body.by || 'no_user';
+
         if(comments === 0) {
           return "No Comments Available";
         } else {
           console.log("First comments", comments, response.body.title);
           async.map(comments, fetchComments);
         }
-        callback();
+        // callback();
       });
     },
   ], function(err) { //This function gets called after the two tasks have called their "task callbacks"
@@ -65,13 +67,17 @@ const fetchComments = (commentId) => {
             finalResponse[user] = 1;
         }
       } else {
-        console.log("comments", comments);
+        console.log(commentId, comments);
         _.map(comments, fetchComments);
       }
   });
-  console.log("response", Object.keys(finalResponse).length);
+
+  // console.log("finalResponse", finalResponse);
+  var counter = 0;
+  _.forEach(finalResponse, function(value, key) {
+    counter += value;
+  })
 }
-// 
 
 var port = process.env.PORT || 8080;
 app.listen(port);
