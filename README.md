@@ -1,1 +1,1 @@
-# automatAIChallenge
+# Hackernews data aggregator

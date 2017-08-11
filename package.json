@@ -1,0 +1,22 @@
+{
+  "name": "automatAIChallenge",
+  "version": "1.0.0",
+  "description": "Challenge to aggregate Hacker News Api",
+  "main": "server.js",
+  "scripts": {
+    "start": "nodemon server.js"
+  },
+  "author": "Ted Wu",
+  "license": "ISC",
+  "dependencies": {
+    "async": "^2.5.0",
+    "dotenv": "^4.0.0",
+    "express": "^4.15.3",
+    "lodash": "^4.17.4",
+    "morgan": "^1.8.2",
+    "request": "^2.81.0"
+  },
+  "devDependencies": {
+    "nodemon": "^1.11.0"
+  }
+}
