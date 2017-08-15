@@ -29,6 +29,7 @@ const fetchStorySetup = (id) => {
   let allComments = [];
   
   let topCommentsPromise = getTopCommentsForTopic(id);
+
   Promise.resolve(topCommentsPromise).then(function(topComments) {
     let traversePromises = [];
     topComments.children.forEach(function(topCommentId) {
@@ -41,9 +42,8 @@ const fetchStorySetup = (id) => {
           sum += dict[key];
         }
       }
-      console.log(dict);
-      console.log(sum);
-      // console.log(allComments);
+      console.log("dictionary", dict);
+      console.log("total comments", sum);
     })
   });
 
@@ -67,10 +67,9 @@ function getTopCommentsForTopic(topic_id) {
 
 function traverse(commentId, dict, allComments) {
   return new Promise((resolve, reject) => {
-    let getCommentPromise = fetch_comment(commentId);
+    let getCommentPromise = fetchComment(commentId);
     Promise.resolve(getCommentPromise).then(function(comment) {
 
-      // add stuff
       let author = comment.author;
       if (author) {
         if (author in dict) {
@@ -96,19 +95,18 @@ function traverse(commentId, dict, allComments) {
   });
 };
 
-function fetch_comment(comment_id, callback) {
-  // console.log("Fetching " + comment_id);
+function fetchComment(commentId, callback) {
   return new Promise((resolve, reject) => {
     request.get({
-      'url': 'https://hacker-news.firebaseio.com/v0/item/' + comment_id + '.json?',
+      'url': 'https://hacker-news.firebaseio.com/v0/item/' + commentId + '.json?',
       'json': true,
     }, function(err, response, body) {
       if (err) {
         reject(err);
       }
-      let author = body.by;
-      let children = body.kids === undefined ? [] : body.kids;
-      resolve({author: author, children: children})
+      const author = body.by;
+      const children = body.kids === undefined ? [] : body.kids;
+      resolve({ author : author, children : children })
     });
   })
 }
