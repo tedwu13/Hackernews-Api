@@ -13,17 +13,19 @@ app.use(morgan('dev'));
 
 app.get('/topstories', function(req, res) {
   const hacker_api = 'https://hacker-news.firebaseio.com/v0/topstories.json';
-  const numStories = 30;
+  const numStories = 3;
   request.get({
     'url': hacker_api,
     'json': true,
   }, function(err, response, body){
     const topStories = response.body.slice(0,numStories);
     const storyPromises = topStories.map(fetchStories)
-    Promise.all(storyPromises).then(values => { res.json({ data: values }); })
-    .catch(reason => { 
+    Promise.all(storyPromises).then(values => {
+      createTable(values); 
+      res.json({ data: values }); 
+    }).catch(reason => { 
       console.log(reason);
-    });;
+    });
   });
 });
 
@@ -44,8 +46,8 @@ function fetchStories(story_id) {
   });
 
 }
-function createTable(finalDictionary) {
-  // const storyName = _.flatten(_.keys(finalDictionary));
+function createTable(data) {
+  const storyName = _.flatten(_.keys(data));
   var table = new Table({ head: ["", "Top Header 1", "Top Header 2"] });
    
   table.push(
@@ -82,9 +84,11 @@ function fetchStoryComments(id) {
 
   return Promise.resolve(topCommentsPromise).then(function(topComments) {
     let traversePromises = [];
-    topComments.children.forEach(function(topCommentId) {
-      traversePromises.push(traverse(topCommentId, dict, allComments));
-    });
+    if(topComments.children !== undefined){
+      topComments.children.forEach(function(topCommentId) {
+        traversePromises.push(traverse(topCommentId, dict, allComments));
+      });
+    }
     
     return Promise.all(traversePromises).then(function() {
       let sum = 0;
@@ -161,12 +165,11 @@ function fetchComment(commentId, callback) {
       if (err) {
         reject(err);
       }
-      if(body === undefined) {
-        return;
+      if(body !== undefined) {
+        const author = body.by;
+        const children = body.kids === undefined ? [] : body.kids;
+        resolve({ author : author, children : children })
       }
-      const author = body.by;
-      const children = body.kids === undefined ? [] : body.kids;
-      resolve({ author : author, children : children })
     });
   })
 }
