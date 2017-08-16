@@ -4,9 +4,12 @@ const dotenv = require('dotenv').config();
 const async = require('async');
 const request = require('request');
 const _ = require('lodash');
+const Table = require('cli-table');
+
 
 const app = express();
 app.use(morgan('dev'));
+
 
 app.get('/topstories', function(req, res) {
   const hacker_api = 'https://hacker-news.firebaseio.com/v0/topstories.json';
@@ -16,9 +19,11 @@ app.get('/topstories', function(req, res) {
     'json': true,
   }, function(err, response, body){
     const topStories = response.body.slice(0,numStories);
-    async.map(topStories, fetchStories);
-
-    res.json({ topStories });
+    const storyPromises = topStories.map(fetchStories)
+    Promise.all(storyPromises).then(values => { res.json({ data: values }); })
+    .catch(reason => { 
+      console.log(reason);
+    });;
   });
 });
 
@@ -33,10 +38,22 @@ function fetchStories(story_id) {
     const userDict = values[1];
     const sortedUserArray = sortUserDict(userDict);
     finalDictionary[title] = sortedUserArray.slice(0,10);
-    return finalDictionary;
-  }).then(finalDictionary => {
-    console.log("Final Results are: ", finalDictionary);
+    return finalDictionary
+  }).catch(error => {
+    console.log(error);    
   });
+
+}
+function createTable(finalDictionary) {
+  // const storyName = _.flatten(_.keys(finalDictionary));
+  var table = new Table({ head: ["", "Top Header 1", "Top Header 2"] });
+   
+  table.push(
+      { 'Left Header 1': ['Value Row 1 Col 1', 'Value Row 1 Col 2'] }
+    , { 'Left Header 2': ['Value Row 2 Col 1', 'Value Row 2 Col 2'] }
+  );
+   
+  console.log(table.toString());
 }
 
 function sortUserDict(userDict) {
@@ -143,6 +160,9 @@ function fetchComment(commentId, callback) {
     }, function(err, response, body) {
       if (err) {
         reject(err);
+      }
+      if(body === undefined) {
+        return;
       }
       const author = body.by;
       const children = body.kids === undefined ? [] : body.kids;
