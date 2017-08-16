@@ -4,7 +4,6 @@ const dotenv = require('dotenv').config();
 const async = require('async');
 const request = require('request');
 const _ = require('lodash');
-const utils = require("./helpers/parser");
 
 const app = express();
 app.use(morgan('dev'));
@@ -35,6 +34,8 @@ function fetchStories(story_id) {
     const sortedUserArray = sortUserDict(userDict);
     finalDictionary[title] = sortedUserArray.slice(0,10);
     return finalDictionary;
+  }).then(finalDictionary => {
+    console.log("Final Results are: ", finalDictionary);
   });
 }
 
@@ -143,7 +144,7 @@ function fetchComment(commentId, callback) {
       if (err) {
         reject(err);
       }
-      const author = body.by === undefined ? 'no author' : body.kids;
+      const author = body.by;
       const children = body.kids === undefined ? [] : body.kids;
       resolve({ author : author, children : children })
     });
