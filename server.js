@@ -11,46 +11,85 @@ app.use(morgan('dev'));
 
 app.get('/topstories', function(req, res) {
   const hacker_api = 'https://hacker-news.firebaseio.com/v0/topstories.json';
-  const numStories = 10;
+  const numStories = 30;
   request.get({
     'url': hacker_api,
     'json': true,
   }, function(err, response, body){
     const topStories = response.body.slice(0,numStories);
-    async.map(topStories, fetchStorySetup);
-    // fetchStorySetup('15014757');
+    async.map(topStories, fetchStories);
 
     res.json({ topStories });
   });
 });
 
-const fetchStorySetup = (id) => {
+function fetchStories(story_id) {
+  let finalDictionary = {};
+  let topicTitle = getTopicTitle(story_id);
+  let userDictionary = fetchStoryComments(story_id);
+  let promisesQueue = [topicTitle, userDictionary];
+
+  return Promise.all(promisesQueue).then(values => { 
+    const title = values[0].title;
+    const userDict = values[1];
+    const sortedUserArray = sortUserDict(userDict);
+    finalDictionary[title] = sortedUserArray.slice(0,10);
+    return finalDictionary;
+  });
+}
+
+function sortUserDict(userDict) {
+    var userArray = [];
+    var property;
+    for (property in userDict) {
+      if (userDict.hasOwnProperty(property)) {
+        userArray.push({
+            'key': property,
+            'value': userDict[property]
+        });
+      }
+    }
+    userArray.sort(function(a, b) {
+        return b.value - a.value;
+    });
+    return userArray;
+}
+
+
+function fetchStoryComments(id) {
   let dict = {};
   let allComments = [];
-  
+
   let topCommentsPromise = getTopCommentsForTopic(id);
 
-  Promise.resolve(topCommentsPromise).then(function(topComments) {
+  return Promise.resolve(topCommentsPromise).then(function(topComments) {
     let traversePromises = [];
     topComments.children.forEach(function(topCommentId) {
       traversePromises.push(traverse(topCommentId, dict, allComments));
     });
-    Promise.all(traversePromises).then(function() {
+    
+    return Promise.all(traversePromises).then(function() {
       let sum = 0;
       for (var key in dict) {
         if (dict.hasOwnProperty(key)) {
           sum += dict[key];
         }
       }
-      console.log("dictionary", dict);
-      console.log("total comments", sum);
+      return dict;
     })
   });
+}
 
-  // let traversalPromise = traverse(id, allComments);
-  // Promise.resolve(traversalPromise).then(function() {
-  //   console.log(allComments);
-  // });
+function getTopicTitle(topic_id) {
+  return new Promise((resolve, reject) => {
+    request.get({
+    'url': 'https://hacker-news.firebaseio.com/v0/item/' + topic_id + '.json?',
+    'json': true,
+    }, function(err, response, body) {
+      if (err) reject(err);
+      return resolve({ title: body.title });
+    });
+  });
 }
 
 function getTopCommentsForTopic(topic_id) {
@@ -60,7 +99,7 @@ function getTopCommentsForTopic(topic_id) {
     'json': true,
     }, function(err, response, body) {
       if (err) reject(err);
-      return resolve({children: body.kids});
+      return resolve({ children : body.kids });
     });
   });
 }
@@ -104,7 +143,7 @@ function fetchComment(commentId, callback) {
       if (err) {
         reject(err);
       }
-      const author = body.by;
+      const author = body.by === undefined ? 'no author' : body.kids;
       const children = body.kids === undefined ? [] : body.kids;
       resolve({ author : author, children : children })
     });
