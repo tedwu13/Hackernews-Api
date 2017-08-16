@@ -15,3 +15,9 @@ The result would be:
 | Story A | user-c (3 for story - 8 total)  | user-b (2 for story - 10 total) |
 | Story B | user-a (4 for story - 9 total)  | user-b (3 for story - 10 total) |
 | Story C | user-b (5 for story - 10 total) | user-a (4 for story - 9 total)  |
+
+Libaries used:
+
+-Nodemon to restart the node server while watching your files and detecting changes when saving file
+-Request node module for simplified http calls (https://github.com/request/request)
+-Cli-table to have command line tables (https://github.com/Automattic/cli-table)
