@@ -13,7 +13,7 @@ app.use(morgan('dev'));
 
 app.get('/topstories', function(req, res) {
   const hacker_api = 'https://hacker-news.firebaseio.com/v0/topstories.json';
-  const numStories = 3;
+  const numStories = 30;
   request.get({
     'url': hacker_api,
     'json': true,
@@ -47,13 +47,24 @@ function fetchStories(story_id) {
 
 }
 function createTable(data) {
-  const storyName = _.flatten(_.keys(data));
-  var table = new Table({ head: ["", "Top Header 1", "Top Header 2"] });
-   
-  table.push(
-      { 'Left Header 1': ['Value Row 1 Col 1', 'Value Row 1 Col 2'] }
-    , { 'Left Header 2': ['Value Row 2 Col 1', 'Value Row 2 Col 2'] }
-  );
+  const storyNames = _.flatten(_.map(data, function(data) {
+    return _.keys(data);
+  }));
+
+  const userNamesData = _.map(data, function(data) {
+    const values = _.flatten(_.values(data));
+    return values.map(function(value) {
+      return value['key'] + "- (" + value['value'] + " comments)";
+    });
+  });
+
+  var table = new Table({ head: ["Story", "1st Commenter", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th", "9th", "10th"] });
+  
+  for(var i = 0; i < storyNames.length; i++) {
+    let tableData = {};
+    tableData[storyNames[i]] = userNamesData[i];
+    table.push(tableData);
+  }
    
   console.log(table.toString());
 }
